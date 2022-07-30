@@ -255,11 +255,13 @@
 
 
 
-      配置好依赖后点击"GENERATE"得到一个demo.zip,解压zip项目并用idea打开项目![1657722488053](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657722488053.png)
+```
+  配置好依赖后点击"GENERATE"得到一个demo.zip,解压zip项目并用idea打开项目![1657722488053](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657722488053.png)
+```
 
-4. SpringBoot的设计思想:约定大于配置.**默认扫描路径是扫描启动类所在包下的所有类和包**
+1. SpringBoot的设计思想:约定大于配置.**默认扫描路径是扫描启动类所在包下的所有类和包**
 
-5. SpringBoot配置文件
+2. SpringBoot配置文件
 
    1. 配置文件的分类
 
@@ -279,7 +281,7 @@
       >
       > ![1657763704239](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657763704239.png)
       >
-      > 注意:@Value括号中的字符串要用$和{}修饰(SpringBoot约定)
+      > 注意:@Value括号中的字符串要用$和{}修饰(SpringBoot约定),注意这里的Value注解的来源是![1658195368963](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658195368963.png)
       >
       > .properties的缺点:配置文件中的key值存在较多的冗余信息,改善方式就是用.yml配置文件
       >
@@ -332,57 +334,268 @@
       4. 使用@PropertySource(该注解只是描述读取的配置文件的路径,还需要搭配@Value来读取配置文件中的项)
       5. 使用原生方式
 
-   5. SpringBoot日志文件
+   5. 配置文件可以做到在不同系统上的兼容
 
-      1. 日志是程序的重要组成部分,日志可以帮助我们排除和定位问题
+      > 公共配置文件(application.xx)中可以设置配置文件具体应用于哪个环境
+      >
+      > 系统1配置文件(application-xt1.xx)中设置在系统1上的相关配置项
+      >
+      > 系统2配置文件(application-xt2.xx)中设置在系统2上的相关配置项
+      >
+      > 在公共配置文件中通过spring.profiles.active来表示使用哪个系统(spring.profiles.active=xt1/xt2)
 
-      2. 日志的主要功能
+3. SpringBoot日志文件
 
-         > 记录用户登录日志,方便分析用户是正常登录还是恶意破解用户
-         >
-         > 记录系统的操作日志,方便数据恢复和定位操作
-         >
-         > 记录程序的执行时间,方便以后优化程序提供数据支持
+   1. 日志是程序的重要组成部分,日志可以帮助我们排除和定位问题
 
-      3. SpringBoot自定义日志的打印![1657802885032](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657802885032.png)
+   2. 日志的主要功能
 
-      4. 日志级别:将日志进行分类,帮助程序员去更精确的定位到对应的日志信息
+      > 记录用户登录日志,方便分析用户是正常登录还是恶意破解用户
+      >
+      > 记录系统的操作日志,方便数据恢复和定位操作
+      >
+      > 记录程序的执行时间,方便以后优化程序提供数据支持
 
-         > 1. trace
-         > 2. debug:调试日志
-         > 3. info:普通信息日志
-         > 4. warn:警告日志
-         > 5. error:错误日志
-         > 6. fatal:致命日志(不支持自定义打印,由系统输出)
-         >
-         > 日志级别从上到下依次升高,级别低的日志可以看到级别高的日志(日志级别越低,打印的日志信息越多)
-         >
-         >  
-         >
-         > 设置日志级别
-         >
-         > ![1657804750130](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657804750130.png)
-         >
-         > 局部范围的设置就是将"root"改成对应的"java"文件夹下某个具体的文件路径
-         >
-         > 全局范围和局部范围的日志设置均存在时,局部范围优先于全局范围
-         >
-         >
-         >
-         > 日志持久化(将日志永久地存储到磁盘的某个位置上)
-         >
-         > 1. 在配置文件中设置日志的保存路径
-         >
-         >    ![1657805226333](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657805226333.png)
-         >
-         > 2. 在配置文件中设置日志的名称(一般设置文件的全路径以及文件的名称)
-         >
-         >    ![1657805403749](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657805403749.png)
-         >
-         >    日志默认情况下是以追加的方式进行的,且每个日志的默认最大大小为10MB,超过10MB会自动建立新的日志文件(名称为原日志文件名称后面+1,+2...)
-         >
-         >  
-         >
-         > 更简单的实现日志打印
+   3. SpringBoot自定义日志的打印![1657802885032](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657802885032.png)
 
-      5. 
+   4. 日志级别:将日志进行分类,帮助程序员去更精确的定位到对应的日志信息
+
+      > 1. trace
+      > 2. debug:调试日志
+      > 3. info:普通信息日志
+      > 4. warn:警告日志
+      > 5. error:错误日志
+      > 6. fatal:致命日志(不支持自定义打印,由系统输出)
+      >
+      > 日志级别从上到下依次升高,级别低的日志可以看到级别高的日志(日志级别越低,打印的日志信息越多)
+      >
+      >  
+      >
+      > 设置日志级别
+      >
+      > ![1657804750130](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657804750130.png)
+      >
+      > 局部范围的设置就是将"root"改成对应的"java"文件夹下某个具体的文件路径
+      >
+      > 全局范围和局部范围的日志设置均存在时,局部范围优先于全局范围
+      >
+      >
+      >
+      > 日志持久化(将日志永久地存储到磁盘的某个位置上)
+      >
+      > 1. 在配置文件中设置日志的保存路径
+      >
+      >    ![1657805226333](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657805226333.png)
+      >
+      > 2. 在配置文件中设置日志的名称(一般设置文件的全路径以及文件的名称)
+      >
+      >    ![1657805403749](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657805403749.png)
+      >
+      >    日志默认情况下是以追加的方式进行的,且每个日志的默认最大大小为10MB,超过10MB会自动建立新的日志文件(名称为原日志文件名称后面+1,+2...)
+      >
+      >  
+      >
+      > **注意:五大注解中只有@Controller注解是直接和前端交互的,所以要想正常将内容显示到网页上,需要用@Controller注解而非其他4种注解**
+      >
+      > 更简单的实现自定义日志打印
+      >
+      > ![1657806863678](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657806863678.png)
+      >
+      > 使用@Slf4j注解提供的log来自定义日志打印.实现原理是SpringBoot在识别到@Slf4j注解后会将这个注解转换为"private static final Logger log=LoggerFactory.getLogger(UserService.class);"
+      >
+      > ![1657807024055](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657807024055.png)	
+
+## Spring MVC
+
+1. Spring MVC原名为Spring Web MVC,是基于Servlet API构建的原始Web框架,包含在Spring框架中,也是一种MVC设计思想的具体实现.Spring MVC随着Spring的产生而诞生,二者的历史要长于Spring Boot
+
+2. MVC:Model View Controller,是软件工程中的一种软件架构模式,将软件系统分为模型(Model),视图(View)和控制器(Controller)
+
+3. MVC是一种设计思想,而Spring MVC是一种具体的框架实现
+
+4. SpringMVC的功能
+
+   1. 实现用户和程序的映射
+
+      1. 用@RequestMapping注解,具体的方法(get or post)可以用参数method来表示,url可以用参数value表示
+      2. 用@PostMapping注解直接表示post方法
+      3. 用@GetMapping注解直接表示get方法
+
+   2. 获取参数
+
+      1. 获取1个参数
+
+         ![1657896175286](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657896175286.png)
+
+         ![1657896185796](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657896185796.png)
+
+         注意传入参数设置成包装类,防止前端传入null而造成程序异常(阿里巴巴规范)
+
+      2. 传入多个参数:可以直接传递一个对象(前端只需要填充该对象的所有属性)
+
+      3. 前端传递的参数名和后端设置的变量名不一致:@RequestParam![1657897222355](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1657897222355.png)
+
+         前端传入的参数名为"name".  注意:当加上@RequestParam时,如果前端不传入该参数则会发生错误,因为该注解默认情况下的required是true,改变这种情况是利用@RequestParam注解中的required参数(@RequestParam(value = "name",required = false))
+
+         该方式接收参数时只允许get方法以及post方法的form表单的形式,不支持JSSON格式
+
+      4. 接收JSON对象
+
+         ![1658069553770](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658069553770.png)
+
+         在参数列表加上@RequestBody注解表示前端传入的参数时JSON格式
+
+      5. 接收文件路径名中隐含的参数
+
+         http://baidu.com/LOL/xiaopao   http://baidu.com?game=LOL&heroname=xiaopao,上述两个网址,前面网址的访问位置是优先后面网址的(前面网址的seo优先级高),因此为了提高网站的访问量,前面网址的方式更优
+
+         ![1658070426553](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658070426553.png)
+
+         ![1658070438746](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658070438746.png)
+
+         利用@PathVariable注解
+
+      6. 上传文件
+
+         @RequestPart()
+
+         ![1658193736482](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658193736482.png)
+
+         利用@RequestPart来表示上传的文件名以及用MultipartFile来上传文件.该上传文件的方式有问题:多个id上传的不同图片后者会完全覆盖前者,最终显示的图片只是最后一个上传的图片
+
+         利用Java中的UUID类生成一个唯一的随机ID来解决这个问题![1658196576466](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658196576466.png)
+
+      7. 获取cookie/session/header
+
+         利用Servlet中的request对象来获取cookie/header/session
+
+         1. 获取cookie
+
+            > 1. 利用Servlet中获取cookie的方法![1658197453940](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658197453940.png)
+            > 2. 使用@CookieValue注解![1658197612304](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658197612304.png)
+
+         2. 获取header
+
+            > 1. 利用Servlet中获取header的方法
+            >
+            >    ![1658197910194](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658197910194.png)
+            >
+            > 2. 使用@RequestHeader注解
+            >
+            >    ![1658197921541](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658197921541.png)
+
+         3. 存储和获取Session
+
+            1. 存储Session
+
+               > 使用Servlet中存储Session的方法
+               >
+               > ![1658198464819](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658198464819.png)
+
+            2. 获取Session
+
+               > 1. 使用Servlet中获取Session的方法![1658198690461](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658198690461.png)
+               >
+               > 2. 使用@SessionAttribute
+               >
+               >    ![1658199244912](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658199244912.png)
+               >
+               >    使用@SessionAttribute时,由于我们无法保证客户端是否已经创建了某个具体的会话以及required默认是true,所以为了不报错,我们需要手动将require的值改为false
+
+   3. 返回数据
+
+      Spring MVC默认返回的是静态页面的名称![1658199721785](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658199721785.png)
+
+      ![1658199730074](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658199730074.png)
+
+      之所以返回的是静态页面的名称,原因是因为在SpringMVC创建初期,写代码的模式还是前后端不分离的.
+
+
+
+      要想返回一个具体的数据,需要添加@ResponseBody![1658199819738](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658199819738.png)
+
+
+
+![1658199833785](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658199833785.png)
+
+@RequestBody既可以修饰类,也可以修饰方法.更简单的方法是@RestController(将@ResponseBody和@Controller结合)![1658199976007](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658199976007.png)
+
+
+
+form表单搭配Spring MVC使用
+
+```java
+/*
+<form action="calc">
+     <h1>计算器</h1>
+      数字1:<input name = "num1" type = "text"> <br>
+      数字2:<input name = "num2" type = "text"><br>
+      <input type = "submit" value = "点击添加">
+</form>
+    */
+    
+    
+    
+@RestController
+public class CalcController {
+
+    @RequestMapping("/calc")
+    public String calc(Integer num1,Integer num2){
+        if(num1 == null || num2 == null){
+            return "参数错误" + "<a href='javascript:history.go(-1)';>返回上一层</a>";
+        }
+        return "<h1>计算结果" +(num1+num2)+ "</h1> <a href='javascript:history.go(-1)';>返回上一层</a>";
+    }
+}
+```
+
+## 热部署
+
+1. 在布置热部署(热加载)之前,我们每次更新代码都需要重启Spring,这是因为Spring只能识别target文件夹下的.class文件,而不能识别源代码.布置了热部署后,其可以实时监控源代码,若发生改变,则自动更新target文件夹
+
+2. 热部署步骤
+
+   1. 添加热部署框架支持
+
+      ```xml
+       <dependency>
+                  <groupId>org.springframework.boot</groupId>
+                  <artifactId>spring-boot-devtools</artifactId>
+                  <scope>runtime</scope>
+                  <optional>true</optional>
+              </dependency>
+      ```
+
+   2. 开启idea的自动编译,需要设置idea的两个settings(当前项目和新项目)![1658326515512](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658326515512.png)
+
+      同时还需要开启新项目的编译功能
+
+   3. 开启运行中热部署
+
+      ![1658326992679](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658326992679.png)
+
+   4. 启动项目使用debug而非run
+
+3. 请求转发和重定向
+
+   1. 请求转发![1658366097794](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658366097794.png)
+
+   2. 请求重定向
+
+      ![1658366523630](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1658366523630.png)
+
+   3. 请求转发和请求重定向的区别
+
+      > 定义不同
+      >
+      > 转发方不同
+      >
+      > 数据共享方式不同
+      >
+      > 最终的url不同
+      >
+      > 实现的代码不同
+      >
+      > 请求转发是服务器的行为,是服务器负责转发的;请求重定向是客户端的行为,有服务器返回错误访问后,客户端重新访问一个新的资源
+      >
+      > 最终的url不同,请求转发最终的url与最开始访问的url一致;请求重定向最终的url是重定向资源的url
