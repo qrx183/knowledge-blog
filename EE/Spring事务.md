@@ -67,3 +67,27 @@
    **@Transactional注解是黑盒,遇到异常自动回滚事务,但当程序员在代码中处理异常后(try catch)后就不会触发事务回滚**
 
    解决方案:在try/catch中的catch中手动设置回滚事务:TransactionAspectSupport.currentTransactionStatus().setRollbackOnly().
+
+### Spring事务传播机制
+
+事务传播机制的定义:Spring事务传播机制定义了多个包含了事务的方法,相互调用时,事务是如何在这些方法间进行传递的.
+
+为什么需要事务传播机制:为了保证稳定性
+
+事务传播机制有哪些?
+
+支持当前事务:
+
+1. Propagation.REQUIRED:默认情况,如果当前存在事务,就加入到事务;如果没有事务,就创建一个事务.
+2. Propagation.SUPPORTS:如果当前存在事务,就加入到事务;如果没有事务,就以非事务的形式运行
+3. Propagation.MANDATORY:如果当前存在事务,就加入到事务;如果没有事务,就抛出异常
+
+不支持当前事务:
+
+1. Propagation.REQUIRES_NEW:创建一个新的事务,如果当前存在事务,则将事务挂起.无论外部方法是否开启事务,内部方法都会开启一个自己的新事务.**事务之间相互独立,互不干扰.**
+2. Propagation.NOT_SUPPORTED:以非事务的方式运行.如果当前存在事务,则将当前事务挂起.
+3. Propagation.NEVER:以非事务的方式运行.如果当前存在事务,则抛出异常.
+
+嵌套事务:
+
+1. Propagation.NESTED:如果当前存在事务,则创建一个事务作为当前事务的嵌套事务运行,如果没有事务就和Propagation.REQUIRED相同.
