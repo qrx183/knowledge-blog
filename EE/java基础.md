@@ -555,22 +555,186 @@ ClassNotFoundException {
 
    因为是抽象类,所以在实现接口时不需要全部实现接口中的抽象方法.接口相当于弥补了Java中没有多继承的缺陷.好的做法是提供一个抽象类来被继承,提供一个接口来生命类型,例如Java.util中的List和AbstractList
 
+4. 何时选用抽象类而不是接口
+
+   接口承担的作用更多的是弥补Java中没有多继承机制,以及作为声明类型来实现多态.抽象类体现的是is,也就是"是什么",而接口体现的是do,也就是能够做什么.因此抽象类更多的是提供共有属性和方法让子类基础,而接口更侧重于程序功能的拓展
+
+   比如说就狗这个动物类而言,抽象类中描述的是狗的共有属性和方法,比如眼睛,鼻子,四条腿,犬吠,而接口就可以描述某一类动物的特有行为(功能的拓展),比如警犬能勘探.
+
 ## Runtime
 
 Runtime:运行时,是一个封装了JVM的类,每个Java程序都会启动一个JVM进程.而每个JVM进程都会对应一个Runtime实例.通过Runtime实例我们可以去指定JVM进程的某些行为.但Runtime实例不能直接获得,需要调用Runtime类的静态方法getRuntime(单例模式)![1662173801089](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1662173801089.png)
 
 ## 泛型中?与T的区别
 
-泛型:
+泛型:参数化类型,将数据的类型指定为一个参数,再具体使用的时候为数据赋予具体的类型
+
+利用泛型来代替Object实现参数类型的**任意化**,可以避免强制类型转换不可预知的缺点.同时泛型是自动隐式发生转换的,提高了代码的可读性,并且将强制转换发生的异常由运行时变到编译时,更加安全
 
 泛型中?和T的区别
 
 T指定了使**某一种类型**的数据,而?则不限于指定某一种类型的数据,也可以是**某些类型**的数据
 
+Java中泛型的实现——**类型擦除**
+
+Java中的泛型是伪泛型,原因是因为泛型在编译期就被编译器擦除了,在运行时不会看到关于泛型的消息.
+
+验证:
+
+```java
+public class Test4 {
+	public static void main(String[] args) {
+		ArrayList<String> arrayList1=new ArrayList<String>();
+		arrayList1.add("abc");
+		ArrayList<Integer> arrayList2=new ArrayList<Integer>();
+		arrayList2.add(123);
+		System.out.println(arrayList1.getClass()==arrayList2.getClass());
+        //运行结果为true,说明在运行期没有泛型信息,只剩下了原始类型
+	}
+}
+
+public class Test4 {
+	public static void main(String[] args) throws IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+		ArrayList<Integer> arrayList3=new ArrayList<Integer>();
+		arrayList3.add(1);//这样调用add方法只能存储整形，因为泛型类型的实例为Integer
+		arrayList3.getClass().getMethod("add", Object.class).invoke(arrayList3, "asd");
+		for (int i=0;i<arrayList3.size();i++) {
+			System.out.println(arrayList3.get(i));
+		}
+        //反射是在运行时动态获取类的信息,通过反射获取的类存储String类型成功,说明在运行时泛型类型变为了原始类型
+	}
+```
+
+原始类型就是擦除了泛型的信息后,在.class文件中保留的类型,没有指定原始类型范围,原始类型即为Object
+
+
+
+类型擦除引发的问题
+
+1. 泛型的使用是在编译期之前完成的,也就是说Java编译器会**先检查程序中的泛型类型,然后再进行类型擦除,然后再编译**
+
+   ```java
+   public static  void main(String[] args) {
+   		ArrayList<String> arrayList=new ArrayList<String>();
+   		arrayList.add("123");
+   		arrayList.add(123);
+       //编译错误,说明Java的泛型使用是在编译前完成的
+   	}
+   ```
+
+   类型检查检查的是对象的引用,而非对象本身
+
+   ```java
+   ArrayList<String> arrayList1=new ArrayList(); //第一种 情况
+   ArrayList arrayList2=new ArrayList<String>();//第二种 情况
+   //上述第一种情况泛型生效,数组中存储的是String类型,而第二种情况泛型不生效,数组中存储的是Object类型
+   ```
+
+2. 泛型中的参数化类型是不支持继承关系的
+
+   ```java
+   ArrayList<String> arrayList1=new ArrayList<Object>();//编译错误
+   ArrayList<Object> arrayList1=new ArrayList<String>();//编译错误
+   ```
+
+   上述第一种情况是将String转换为Object,本身就会发生强转错误
+
+   上述第二种情况尽管Object可以强转为String,但泛型本身就是为了解决显示强转的缺陷,这样写违背了泛型的设计理念
+
+3. 子类继承父类时指定父类的泛型类型并重写父类的相关方法时,实际上重写的这两个方法并不能直接被使用,由于类型擦除在编译后父类中的方法变为Object,而子类中的方法类型为具体的指定类型.为了解决这个问题,JVM在字节码中独立设置了单独的方法来包装重写的方法(巧方法)
+
+   ```java
+   class Pair<T> {
+   	private T value;
+   	public T getValue() {
+   		return value;
+   	}
+   	public void setValue(T value) {
+   		this.value = value;
+   	}
+   }
+   
+   class DateInter extends Pair<Date> {
+   	@Override
+   	public void setValue(Date value) {
+   		super.setValue(value);
+   	}
+   	@Override
+   	public Date getValue() {
+   		return super.getValue();
+   	}
+   }
+   
+   // 类型擦除后,父亲的泛型类型变为了Object类型
+   class Pair {
+   	private Object value;
+   	public Object getValue() {
+   		return value;
+   	}
+   	public void setValue(Object  value) {
+   		this.value = value;
+   	}
+   }
+   
+   // 字节码文件设置了两个同名的Object方法来调用重写的两个方法
+   class com.tao.test.DateInter extends com.tao.test.Pair<java.util.Date> {
+     com.tao.test.DateInter();
+       Code:
+          0: aload_0
+          1: invokespecial #8                  // Method com/tao/test/Pair."<init>"
+   :()V
+          4: return
+    
+     public void setValue(java.util.Date);  //我们重写的setValue方法
+       Code:
+          0: aload_0
+          1: aload_1
+          2: invokespecial #16                 // Method com/tao/test/Pair.setValue
+   :(Ljava/lang/Object;)V
+          5: return
+    
+     public java.util.Date getValue();    //我们重写的getValue方法
+       Code:
+          0: aload_0
+          1: invokespecial #23                 // Method com/tao/test/Pair.getValue
+   :()Ljava/lang/Object;
+          4: checkcast     #26                 // class java/util/Date
+          7: areturn
+    
+     public java.lang.Object getValue();     //编译时由编译器生成的巧方法
+       Code:
+          0: aload_0
+          1: invokevirtual #28                 // Method getValue:()Ljava/util/Date 去调用我们重写的getValue方法
+   ;
+          4: areturn
+    
+     public void setValue(java.lang.Object);   //编译时由编译器生成的巧方法
+       Code:
+          0: aload_0
+          1: aload_1
+          2: checkcast     #26                 // class java/util/Date
+          5: invokevirtual #30                 // Method setValue:(Ljava/util/Date;   去调用我们重写的setValue方法
+   )V
+          8: return
+   }
+   ```
+
+
 ## 字节流 字符流
 
 字节流与字符流的区别
 
+1. 字节流处理的是二进制文件,字符流处理的是文本文件
+2. 字节流操作时不使用缓冲区,而字符流在操作的时候使用缓冲区
+3. 字节流不使用close方法也可以正常输出文件内容,而字符流因为要是用缓冲区,如果不使用flush方法,在不调用close方法时不会自动刷新缓冲区
 
+## 静态内部类 匿名内部类
 
-## 静态内部类 匿名类
+静态内部类不同于其他的内部类,它独立于外部类存在,可以不依赖外部类实例化而被实例化.静态内部类又可以称为是嵌套类,在静态内部类中,不可以访问外部类中的非静态成员或方法.普通内部类中隐式存在一个指向其外部类的引用,其实例化依赖于外部类的实例化,相当于外部类的一部分.
+
+匿名内部类就是没有名字的普通内部类
+
+匿名内部类的规则
+
+1. 匿名内部类内部不能有抽象的方法,因为创建匿名内部类时就创建了匿名内部类的实例
+2. 匿名内部类内部必须实现接口或抽象父类中的所有抽象方法
