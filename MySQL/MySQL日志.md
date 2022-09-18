@@ -137,6 +137,48 @@ MySQL主从复制的模型
 
 ## 两阶段提交
 
+两阶段提交指的是redo log和binlog的提交.为了保证两个日志均持久化到磁盘上,防止出现半成功的状态,造成主从复制不一致.
+
+1. redo log持久化到磁盘----MySQL崩溃----MySQL恢复后根据redo log更新主库磁盘数据----由于binlog没有持久化到磁盘,从库在复制时得到的数据和主库不一致
+2. binlog持久化到磁盘----MySQL崩溃----MySQL恢复后由于redo log没有持久化,从库根据binlog复制得到的数据和主库不一致
+
+两阶段提交可以保证redo log和binlog的一致性,要么都成功,要么都不成功.
+
+两阶段提交将单个事务的提交分为了2个独立的阶段:准备(prepare)阶段和提交(commit)阶段.
+
+两阶段提交的过程
+
+在MySQL中使用了内部XA事务实现的两阶段提交
+
+1. prepare阶段:首先将XA事务的ID写入到redo log,同时将redo log对应的事务状态设为prepare,然后将redo log刷新到磁盘
+2. commit阶段:将XA事务的ID写入到binlog,然后将binlog刷新到磁盘,然后调用引擎的提交事务接口,将redo log对应的事务状态适合值为commit![1661909192924](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1661909192924.png)
+
+两阶段提交在遇到异常情况时如何保证redo log和binlog的一致性
+
+1. 写入redo log但没有写入binlog(A)
+
+   MySQL在写入redo log后崩溃,重启后会寻找处于prepare标识的redo log,然后根据这个标识找对应的binlog,结果发现不存在这样的一个binlog,于是将事务回滚.
+
+2. 写入redo log和binlog但没有写入commit 标识(B)
+
+   MySQL在写入commit标识前崩溃,重启后会寻找处于prepare标识的redo log,然后根据这个标识找对应的binlog,当找到后提交事务.
+
+**两阶段提交是以binlog是否持久化到磁盘来确认是事务回滚还是事务提交**
+
+两阶段提交的问题
+
+1. 磁盘I/O次数高:一个事务的提交需要2次刷盘:redo log刷盘,binlog刷盘
+2. 锁竞争激烈:一个事务只有在获取到锁时才可以进入到prepare阶段,在commit阶段结束以后才可以释放锁
+
+ 为了提交两阶段提交的效率,引出了**组提交**
+
+组提交是将多个binlog/redo log合并成一个以后再进行刷盘.组提交分为3个阶段:flush阶段,sync阶段,commit阶段.**每个阶段会维护一个队列,因此只需要锁队列而无需锁整个事务**
+
+flush阶段:负责将多个事务的redo log合并并刷新到磁盘,然后将多个事务的binlog存储到binlog文件中
+
+sync阶段:负责将多个事务的binlog文件合并然后刷新到磁盘
+
+commit阶段:负责写入事务的commit标识,调用引擎的提交事务接口,将redo log的事务状态设置为commit
 
 
-## 优化MySQL磁盘I/O
+
