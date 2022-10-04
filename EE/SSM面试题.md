@@ -267,6 +267,89 @@
 7. 事务
 
    1. 事务的实现方式
+
+      事务的实现方式有2种:编程式事务和提交式事务
+
+      1. 编程式事务:通过调用beginTransaction(),commit(),rollback()方法管理事务
+
+         ```java
+         @RestController
+         @RequestMapping("/user")
+         public class UserController {
+         
+             @Autowired
+             private UserService userService;
+         
+             @Autowired
+             DataSourceTransactionManager transactionManager;
+         
+             @Autowired
+             TransactionDefinition definition;
+         
+             @RequestMapping("/add")
+             public int add(UserInfo userinfo){
+                 //开启事务
+                 TransactionStatus transactionStatus = transactionManager.getTransaction(definition);
+                 if(userinfo == null || !StringUtils.hasLength(userinfo.getUsername()) || !StringUtils.hasLength(userinfo.getPassword())){
+                     return 0;
+                 }
+                 int res = userService.add(userinfo);
+                 //回滚事务
+             //    transactionManager.rollback(transactionStatus);
+                 //提交事务
+                 transactionManager.commit(transactionStatus);
+                 return res;
+             }
+         }
+         ```
+
+      2. 提交式事务
+
+         通过@Transactional注解来管理事务.
+
+         Transactional注解的参数说明
+
+         > 1. value/transactionManager:当配置了多个事务管理器时,可以使用该属性指定选择哪个事务管理器
+         > 2. propagation:事务的传播行为,当存有嵌套事务时指定哪个事务生效
+         > 3. isolation:事务的隔离级别
+         > 4. timeout:如果时间超过timeout事务还没有完成,则自动回滚事务
+         > 5. readOnly:指定事务是否为只读事务,默认为false
+         > 6. rollbackFor/rollbackForClassName:用于指定可以触发事务回滚的异常类型,可以是多个.
+         > 7. noRollBackFor/noRollBackForClassName:用于指定不触发事务回滚的异常类型,可以是多个.
+
    2. 事务的传播级别
 
+      事务的传播机制就是确定当多个设置了方法的事务在相互调用时,事务在方法间如何传递的一种机制
+
+      事务的传播机制一共有7种级别
+
+      1. Propagation.REQUIRED:默认的Spring事务传播级别.该级别的特点是如果当前上下文中存在事务,就将新的方法加入到该事务中执行;如果没有则创建新事务执行.
+
+      2. Propagation.SUPPORTS:特点是如果当前上下文中存在事务,就将新的方法加入到该事务中执行;如果没有则按照非事务的方式执行
+
+      3. Propagation.MANDATORY:特点是要求当前上下文中必须存在事务,否则抛出异常
+
+      4. Propagation.REQUIRED_NEW:每次执行都会创建一个新的事务,如果当前上下文中已经存在事务,就将当前事务挂起,等新事务执行结束后再执行已经存在的事务
+
+      5. Propagation.NOT_SUPORTED:特点是如果当下上下文中存在事务,就将该事务挂起,待逻辑执行结束后再恢复该事务
+
+      6. Propagation.NEVER:特点是如果当前上下文中存在事务就抛出异常
+
+      7. Propagation.NESTED:特点是如果当前上下文中存在事务就嵌套事务执行,否则创建新的事务
+
+         嵌套事务指的是新创建的事务作为子事务嵌套在父事务中执行.在执行过程中父事务会在子事务的开始点处标记回滚点save point.当子事务回滚,父事务会回到回滚点,回滚点之前的操作不会受影响,然后继续执行回滚点之后的操作;父事务回滚会造成子事务也回滚;子事务在父事务之前提交,但在父事务执行结束前,子事务不会发生提交
+
 8. Spring MVC
+
+   1. Spring MVC是一个基于MVC架构的用来简化web应用程序开发的应用开发框架,是Spring中的一个模块.MVC即为Model View Controller,通过将Web分离成MVC三部分从而简化了Web的开发
+
+   2. Spring MVC的执行流程
+
+      首先DispatcherServlet接收前端用户传递来的请求,DispatcherServlet调用HandlerMapping处理器映射器;HandlerMapping根据url获取到该Handler配置的所有对象(包括Handler对象以及Handler对象对应的拦截器),并将对象以处理器执行链的方式返回给DispatcherServlet;DispatcherServlet通过HandlerAdapter(处理器适配器)来执行处理器的请求并返回ModelAndView,DispatcherServlet将ModelAndView传给ViewResolver视图解析器;ViewResolver解析后将结果返回给DispatcherServlet,DispatcherServlet对View进行渲染视图.![1664884062411](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1664884062411.png)
+
+   3. Spring  MVC的加载流程
+
+      1. Servlet加载(执行Servlet的init()方法)
+      2. 加载配置文件
+      3. 从ServletContext中拿到Spring初始化Spring MVC相关对象
+      4. 放入ServletContext中
