@@ -353,3 +353,162 @@
       2. 加载配置文件
       3. 从ServletContext中拿到Spring初始化Spring MVC相关对象
       4. 放入ServletContext中
+
+9. Spring MVC与Servlet的区别和联系
+
+   Spring MVC是对Servlet的一个封装,在Spring MVC中有一个核心类DispatcherServlet就是实现的Servlet接口.
+
+10. 常见的ORM框架有哪些
+
+    ORM,Object Relational Mapping.对象关系映射,是一种为了解决面向对象和关系数据库之间互不匹配的现象的技术
+
+    常见的ORM框架有MyBatis,Hibernate.
+
+    > Hibernate:Hibernate框架是一个全表映射的框架,开发者只需要定义持久化对象和关系数据库之间的映射关系即可完成持久层操作
+    >
+    > Hibernate框架会根据编制的存储逻辑自动生成SQL语句,并调用JDBC接口执行.
+    >
+    > Hibernate的缺点
+    >
+    > 1. 多表查询时,SQL查询性能低
+    > 2. 不支持存储过程
+    > 3. 不能通过优化SQL的方式提高性能
+    >
+    > MyBatis:MyBatis框架是一个半自动映射的框架.相对于Hibernate而言,MyBatis需要手动设置POJO(简单的Java对象),SQL和映射关系.
+
+11. IoC/DI的理解
+
+    IoC即为Spring的核心思想之一.IoC,,Inversion of Control.控制反转.即将管理对象的生命周期以及对象之间的依赖关系的权利由对象引用本身,也可以说是开发人员转交给Spring容器.
+
+    通过IoC可以实现对象的创建和使用代码的解耦,即开发人员在使用对象前只需要从Spring容器中将对象取出,然后直接使用即可.IoC的实现同时也使得开发流程变得更加简单.
+
+    DI,Dependency Injection,依赖注入.是IoC思想的实现方式.在Java中注入的方式分为三种,分别是属性注入,构造方法注入和setter方法注入.
+
+    1. 属性注入:写法简单,但是通用性差,只能运行在IoC容器下
+    2. setter注入:早起Spring推荐的写法,Setter注入通用性要差于构造方法注入(其他高级语言大多不再用java的这种get和set方法)
+    3. 构造方法注入:现在官方推荐的写法,通用性最好
+
+    在进行依赖注入时,可以使用@Autowired注解或@Resources注解.二者的区别如下
+
+    1. 出身不同:@Resource来自于JDK,@Autowired来自于Spring
+    2. 用法不同:@Resource支持属性注入和Setter注入,@Autowired支持属性注入,Setter注入和构造方法注入
+    3. 支持的参数不同:@Resource支持更多的参数设置(name,type..),而@Autowired只支持required参数的设置
+
+12. Spring中单例Bean的线程安全问题
+
+    在Spring中默认的Bean的作用域是单例,也就意味着在多线程的环境下如果对某个变量进行写的操作可能会造成线程不安全.
+
+    针对线程不安全问题,我们可以通过设置@Scope来讲Bean的作用域从单例改为原型,也可以通过将共享变量放入ThreadLocal中,对ThreadLocal中的变量副本进行操作
+
+    ```java
+    // ThreadLocal 实例
+    	static int a = 10;
+        static ThreadLocal<Integer> threadLocal = new ThreadLocal<Integer>(){
+            @Override
+            protected Integer initialValue() {
+                return 0;
+            }
+        };
+        public static void main(String[] args) {
+            for(int i = 0; i < 5; i++) {
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Integer n = threadLocal.get();
+                        n += 1;
+                        threadLocal.set(n);
+                        System.out.println(threadLocal.get());
+                    }
+                });
+                t.start();
+            }
+        }
+    
+    /*
+    运行结果:
+    1
+    1
+    1
+    1
+    1
+    */
+    // 通过运行结果我们可以看到ThreadLocal中变量副本在每个线程内是独立存在的
+    ```
+
+13. FactoryBean和BeanFactory
+
+    BeanFactory是Spring中的顶级接口,负责管理Spring中的所有Bean对象.
+
+    FactoryBean是一个获取Bean对象的接口.对象类通过实现FactoryBean接口并重写接口下的getObject方法来返回对象.  例如当我们想要获取一个第三方库的某个对象时,一般情况下我们无法通过new得到对应的对象,此时如果该对象重写了FactoryBean接口,那么我们就可以通过调用getObject方法来获取到对象实例.
+
+    ```
+    
+    ```
+
+14. Spring三级缓存的理解
+
+    在Spring中,Bean对象是保存在缓存中的.一个Bean的生命周期概括为实例化Bean,属性注入,初始化Bean,使用Bean,销毁Bean.
+
+    在Spring中一共有3级缓存,每个缓存的本质其实是一个哈希表,key为Bean对象的名字,value为对应的Bean对象.在1级缓存中存储的是已经初始化好的Bean对象,2级缓存中存储的是属性未完全注入的Bean对象,如果是经过AOP代理,则存储的是Bean的代理对象,3级缓存中存储的是Bean的工厂类(ObjectFactory)
+
+    每个Bean对象在创建的过程中只能存在于某一个缓存中,不能同时存在于两个及以上的缓存中.而创建Bean对象的顺序是从3级-->1级,而查询Bean对象则是通过1级--->3级
+
+    Spring中三级缓存很好的解决了循环依赖的问题.循环依赖即存在两个对象A和B,A中含有属性B,B中含有属性A.导致在初始化A,B时造成一种僵局.
+
+    Spring三级缓存解决循环依赖的过程
+
+    首先实例化对象A,将A放入到3级缓存中,然后执行A的属性注入,从上到下查询缓存发现没有B对象,于是先把对象A放入到2级缓存中,然后再实例化对象B,将B放入到3级缓存中,然后执行B的属性注入,从上到下在2级缓存中查询到对象A,对象B的属性注入完成,执行初始化然后放到1级缓存中,此时轮到对象A的属性注入,在1级缓存中找到对象B,对象A的属性注入完成,执行初始化然后放到1级缓存中.
+
+15. Spring中事务的隔离级别
+
+    1. ISOLATION_DEFAULT:使用数据库的默认隔离级别.MySQL中默认的隔离级别是可重复读
+    2. ISOLATION_READ_UNCOMMITTED:读未提交,允许读取尚未提交的数据
+    3. ISOLATION_READ_COMMITTED:读已提交,允许读取已经提交的数据
+    4. ISOLATION_REPEATABLE_READ:可重复读,保证多次读取同一数据的结果是相同的
+    5. ISOLATION_SERIALIZABLE:串行化,相当于是单线程下执行事务,一个线程只有等待另一个线程事务结束后才能对数据库中的数据进行操作
+
+16. MyBatis中#和$的区别
+
+    1. #{}注入本质上是预处理,jdbc占位符的替换,当传入的是一个字符串时,会替代成加引号的字符串;${}注入本质上是SQL字符串的拼接,当传的是一个字符串时,结果就是在字符串的字面量值
+    2. #{}适用于所有类型的参数,${}适用于数值型的参数
+    3. #{}的安全性更好,${}存在SQL注入的安全问题,但如果输入的是SQL中的关键字,则只能使用${}
+
+17. MyBatis如何实现一对一,一对多关联
+
+    一对一关联:在xml配置文件中使用association标签,在association标签中存在三个子标签分别是property:标记绑定的实体类的类名,resultMap:关联结果集的路径,columnPrefix:防止两个表同名字段的覆盖
+
+    ```xml
+     <resultMap id="BaseMap" type="com.example.mybatis1.model.UserInfo">
+            <id column="id" property="id"></id>
+            <result column="username" property="username"></result>
+            <result column="password" property="password"></result>
+            <result column="photo" property="photo"></result>
+            <result column="createtime" property="createtime"></result>
+            <result column="updatetime" property="updatetime"></result>
+            <result column="state" property="state"></result>
+            <collection property="aList"
+                        resultMap="com.example.mybatis1.mapper.ArticleMapper.BaseMap"
+                        columnPrefix="a_"
+            ></collection>
+        </resultMap>
+    ```
+
+    一对多关联:在xml配置文件中使用collection标签,在collection标签中的三个字标签和association标签中的一样
+
+    ```xml
+    <resultMap id="BaseMap" type="com.example.mybatis1.model.ArticleInfo">
+            <id column="id" property="id"></id>
+            <result column="title" property="title"></result>
+            <result column="content" property="content"></result>
+            <result column="createtime" property="createtime"></result>
+            <result column="updatetime" property="updatetime"></result>
+            <result column="uid" property="uid"></result>
+            <result column="rcount" property="rcount"></result>
+            <result column="state" property="state"></result>
+            <association property="userInfo"
+                         resultMap="com.example.mybatis1.mapper.UserMapper.BaseMap"
+                         columnPrefix="u_"></association>
+        </resultMap>
+    ```
+
+18. SpringBoot的自动配置原理
