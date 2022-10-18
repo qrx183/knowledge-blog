@@ -180,9 +180,7 @@ final boolean nonfairTryAcquire(int acquires) {
 **unlock**
 
 ```java
-public void unlock() {
-    sync.release(1);
-}
+public void unlock() {    sync.release(1);}
 ```
 
 调用sync.release方法
@@ -459,6 +457,74 @@ ReentrantLock和synchronized的区别
 
       死锁检测指的是当一个进程抢占某个资源时,在一个数据结构中记录先该进程,没有抢占资源的进程也作记录.这样当一个进程在请求锁时发现锁资源请求失败时,就可以在锁资源对应的数据结构上查找是否是某个线程已经占用了该锁,从而判断是否发生了死锁
 
+      ```java
+      // 死锁检测的逻辑
+      import java.util.*;
+      
+      /**
+       * @author qiu
+       * @version 1.8.0
+       */
+      public class Main {
+          static HashMap<Integer,SourceDivideList> map;
+          static boolean flag;
+          static List<Integer> isUsed;
+          public static void main(String[] args) {
+              flag = false;
+              map = new HashMap<>();
+              isUsed = new ArrayList<>();
+              // 把当前正在被使用的锁资源更新到map中
+              SourceDivideList s1 = new SourceDivideList();
+              s1.usedId = 1;
+              s1.waitIdList = new ArrayList<>();
+              s1.waitIdList.add(2);
+              SourceDivideList s2 = new SourceDivideList();
+              s2.usedId = 2;
+              s2.waitIdList = new ArrayList<>();
+              s2.waitIdList.add(3);
+              SourceDivideList s3 = new SourceDivideList();
+              s3.usedId = 3;
+              s3.waitIdList = new ArrayList<>();
+              s3.waitIdList.add(1);
+              map.put(s1.usedId,s1);
+              map.put(s2.usedId,s2);
+              map.put(s3.usedId,s3);
+              Set<Integer> set = map.keySet();
+              for(Integer id : set){
+                  SourceDivideList s = map.get(id);
+                  dfs(s);
+                  if(flag){
+                      System.out.println("发生了死锁");
+                      return;
+                  }
+              }
+          }
+          private static void dfs(SourceDivideList s){
+              if(isUsed.contains(s.usedId)){
+                  flag = true;
+              }
+              if(flag){
+                  return;
+              }
+              isUsed.add(s.usedId);
+              for(Integer id : s.waitIdList){
+                  if(map.containsKey(id)){
+                      dfs(map.get(id));
+                  }
+              }
+      
+          }
+          static class SourceDivideList{
+              int sourceId;
+              int usedId;
+              List<Integer> waitIdList;
+          }
+          // 资源1--->usedId:1,waitIdList:2
+          // 资源2--->usedId:2,waitIdList:1
+      }
+      
+      ```
+
       当死锁检测成功后,针对死锁对应的循环链中,可以通过设置进程的优先级来让循环链中的某些线程主动释放锁,从而解除死锁
 
 ## 线程池
@@ -733,4 +799,21 @@ public class SingleTon{
     }
 }
 ```
+
+## 进程,线程
+
+1. 概念
+
+2. 1. 进程是并发执行的程序在执行过程中分配和管理资源的基本单位,是一个动态概念,竞争计算机系统的基本单位
+   2. 线程是进程的一个执行单元,是进程内的一个调度实体.
+   3. 协程是一种比线程更加轻量级的存在,一个线程也可以拥有多个协程.
+
+2. 进程和线程的区别
+   1. 进程是操作系统分配和管理资源的基本单位,而线程是操作系统调度的基本单位
+   2. 资源:线程共享一个进程内的资源,如内存,I/O,cpu等,不利于资源的管理和保护,而进程之间的资源是独立的,能很好的进行资源管理和保护
+   3. 从健壮性方面考虑,多进程要比多线程健壮,一个进程崩溃后不会对其他进程造成影响,但一个线程崩溃会造成进程内的其他线程都崩溃
+3. 使用场景
+   1. 当对资源的管理和保护要求比较高,对资源开销和效率要求比较低时考虑使用多进程
+   2. 当频繁进行切换,对效率要求比较高,对资源的管理保护要求比较低时考虑使用多线程
+
 
