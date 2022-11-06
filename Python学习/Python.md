@@ -18,9 +18,6 @@ Python是一种动态语言,在赋值前不需要指定类型
 
 2. 包名和变量名小写,变量名分割符可以用_,模块(函数)名用\_分割,常量名用大写
 
-3. ```python
-   
-   ```
 
 ### 字符串
 
@@ -219,5 +216,56 @@ def func1(a, n = 2):
 if __name__ = '__main__':
     print(func(2))  # 4
     print(func(2, 3)) # 8
+    
+# 在python中函数的返回值如果是多个的话,返回的是一个元祖(tuple)
+
+# 在使用默认参数是要注意默认的值在定义的时候被赋值并分配内存空间,之后每次调用会改变默认参数的值
+# 因此最好将默认参数设置为不可变对象None,str之类的
+def func2(l = []):
+    l.append('end')
+    return l
+def func3(l = None):
+    if l is None:
+        l = []
+     l.append('end')
+     return l
+if __name__ = '__main__':
+    print(func2())  # ['end']
+    print(func2())  # ['end', 'end']
+    print(func3())  # ['end']
+    print(func3())  # ['end']
+    
+ # python中还允许有可变参数:*variable
+def func4(*var):
+    sum = 0
+    for i in var:
+        sum = sum + i
+    return sum
+if __name__ = '__main__':
+    print(func4(1,2,3)) # 6
+    l = [1, 2, 3]
+    print(func4(*l)) # 6
+```
+
+
+
+### 高级特性
+
+#### 切片
+
+#### 列表生成式
+
+```python
+l = [x * x for x in range(1,11)] # 快速生成1,11的平方组成的列表,甚至还可以在for循环之后添加if判断语句
+print([m+n for m in 'abc' for n in 'abc']) # 一行生成全排列,这个太秀了!
+```
+
+#### 生成器
+
+```python
+g = x * x for x in range(1,11) # 得到一个生成器generator
+# 生成器可以通过for循环来得到生成器中的元素
+for i in g:
+    print(i)
 ```
 
