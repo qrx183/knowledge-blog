@@ -30,7 +30,7 @@
 1. 需要事务支持
 2. 基于SQL的结构化存储查询.即当不需要使用SQL或使用SQL无法达到效果的情况下可以使用NoSQL
 
-### 常见的NoSQL数据库
+### 常见的NoSQL数据库 
 
 1. Memcache
    1. 数据都存储在内存中,无法持久化
@@ -97,7 +97,7 @@
 
 ### key的操作
 
-1. key *  // 查看数据库的所有的key值
+1. keys *  // 查看数据库的所有的key值
 2. exists key值 // 查看key值是否存在(存在为1,不存在为0)
 3. type key值 // 查看key值的类型
 4. del key值 // 删除key值 直接删除key值
@@ -131,13 +131,138 @@ string类型是二进制安全的,即string中可以包含任意类型的数据.
 14. setex key 过期时间 value // 在创建键值对时就设置键值对的过期时间
 15. getset key value // 取出key对应的旧的value值,并将key的value值设置为新的value值
 
-string的数据结构为简单的动态字符串(二倍扩容,当字符串长度超过1M,每次只会扩容1M,最大长度为512M)
+string的数据结构为简单的动态字符串(二倍扩容,当字符串长度超过1M,每次只会扩容1M,最大长度为512M)'
+
+### list
+
+redis中list是一个双向链表
+
+常用命令
+
+1. lpush k1 v1 v2 v3 // 从左到右向列表k1中放入三个元素(头插法)
+2. rpush k1 v1 v2 v3 // 从右到左向列表k1中放入三个元素(尾插法)
+3. lrange k1 from to // 从k1中取出from到to的元素,[0,-1] 表示取出list中的所有元素
+4. lpop/rpop k1 // 从左/右取出k1中的一个元素(pop消除)
+5. rpoplpush k1 k2 // 将k1中最后一个元素取出放入到k2的头部
+6. lindex k1 index //取出k1中下标为index的元素
+7. llen k1 // 获得k1的长度
+8. linsert k1 before/after v1 newv1 // 在k1的v1的前面/后面插入一个新的元素newv1
+9. lrem k1 n v1 // 从左到右删除k1中的n个v1
+10. lset k1 index v1 // 将k1中下标为index的元素改为v1 
+
+### set
+
+redis中set是一个哈希表,无序存储非重复的元素
+
+常用命令
+
+1. sadd k1 v1 v2 v3 // 向集合k1中存储3个元素
+2. smembers k1 // 取出k1中的所有元素
+3. sismember k1 v1 // 查看集合k1中是否存在v1元素
+4. scard k1 // 查看k1中元素的个数
+5. srem k1 v1 // 删除k1中的v1
+6. smove k1 k2 v3 // 将k1中的v3放入到k2
+7. sinter k1 k2 // 取k1 和 k2 的交集
+8. sunion k1 k2 // 取k1 和 k2 的并集
+9. sdiff k1 k2 // 取k1 和 k2 的差集
+
+### Hash
+
+常用命令
+
+1. hset user : 1 id 1 // 向哈希user中创建key为1,id为1的映射
+2. hget user : 1 id // 获取哈希user中key为1的值中id的值
+3. hmset user : 1 id 1 name 'zhangsan' // 一次批量添加不同的值
+4. hkeys user : 1 // 获取key为1对应的值中的所有的key
+5. hvals user : 1 // 获取key为1对应的值中的所有的value
+6. hexists key value // 查询key对应的value是否存在
+7. hincrby key value n // 让key对应的value加n 
+
+### zset
+
+在set的基础上保证了元素的有序性
+
+zadd key k1 v1 k2 v2 // 向集合key中添加
+
+zrange key from to // 查看集合key中的from到to的元素
+
+zrangebyscore key  min max // 查看集合key中得分在[min,max]中的所有元素
+
+zrevrangebyscore key min max // 倒序查看集合key中得分在[min,max]中的所有元素
+
+zrem key value // 删除集合key中的value元素
+
+zcount key min max // 返回集合key中得分在[min,max]中的元素个数
+
+zrank key value // 查看集合中value的得分排名(升序)
 
 ## Redis6配置文件
 
+redis.conf为redis的配置文件.在/etc路径下
+
+1. bind
+
+   ![1667815795547](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1667815795547.png)
+
+   表示127.0.0.1访问的本地主机
+
+2. ![1667815838101](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1667815838101.png)
+
+   表示开启保护模式,只能有本地进行访问redis,改为no即其他主机也可以进行访问
+
+3. port
+
+   ![1667815926517](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1667815926517.png)
+
+   访问redis的默认端口号
+
+4. ![1667815940893](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1667815940893.png)
+
+   表示正在进行tcp三次握手的队列个数和已经完成tcp三次握手的队列个数的和
+
+5. ![1667815996994](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1667815996994.png)
+
+   表示当你长时间不操作时断开连接的时间(0为永不超时)
+
 ## Redis6的发布和订阅
 
+发布:publish channel名 message
+
+订阅:subscribe channel名
+
 ## Redis6新数据类型
+
+### Bitmaps
+
+位图
+
+常用命令
+
+1. setbit keys value 1/0 // 表示在位图keys中偏移量为value对应的是否存在(1为存在,0为不存在)
+2. getbit keys value // 查看位图keys中偏移量为value对应的是否存在
+3. bitcount keys from to // 返回位图keys中偏移量在[from,to]中的个数
+4. bitop or/and destkey key1 key2 key... // 对位图进行位操作,将key1-keyn的元素位运算存储到destkey中
+
+### Hyperloglog
+
+Hpyerloglog是一种使用更小内存去存储更多的基数(不重复的数)的数据结构
+
+常用命令
+
+1. pfadd keys v1 v2 v3 // 向keys中添加v1,v2,v3(重复的元素不会添加成功)
+2. pfcount keys // 查看keys中的元素个数
+3. pfmerge destkey keys1 keys2 // 将keys1中的元素和keys2中的元素合并添加到destkey中
+
+### Geospitial
+
+设置地方的经纬度,方便计算两个地方的距离
+
+常用命令
+
+1. geoadd keys j w city ... // 向keys中添加经度为j,纬度为w的城市
+2. geopos keys city // 从keys中取出city的经纬度
+3. geodist keys city1 city2  dw// 从keys中计算city1和city2之间的直线距离,单位为dw
+4. georadius keys j w radius dw // 以j为经度,w为纬度方圆radius,单位为dw范围内keys中的值取出来
 
 ## Jedis操作Redis6
 
@@ -154,4 +279,3 @@ string的数据结构为简单的动态字符串(二倍扩容,当字符串长度
 ## Redis6的集群
 
 ## Redis6新功能
-
