@@ -266,9 +266,221 @@ Hpyerloglog是一种使用更小内存去存储更多的基数(不重复的数)�
 
 ## Jedis操作Redis6
 
+jedis是在java中连接redis的一种工具
+
+连接步骤(idea上利用jedis连接云服务器上的redis)
+
+1. 首先需要在云服务器上将对应端口的防火墙打开![1667874068961](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1667874068961.png)
+
+2. 在xshell上打开redis.conf文件 vim/redis.conf所在的文件夹/redis.conf
+
+   ![1667874211296](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1667874211296.png)
+
+   将bind 127.0.0.1 这行注释掉
+
+   将protected-mode 改为yes
+
+   保存退出
+
+3. 重启redis
+
+   redis-cli shutdown
+
+4. 在idea上创建maven项目引入jedis的依赖
+
+   ```xml
+     <dependency>
+              <groupId>redis.clients</groupId>
+               <artifactId>jedis</artifactId>
+               <version>3.2.0</version>
+           </dependency>
+   ```
+
+5. 写测试函数检验是否连接成功
+
+   ```java
+   public class JedisDemo {
+       public static void main(String[] args) {
+           Jedis jedis = new Jedis("43.138.26.181",6379);
+           String value = jedis.ping();
+           System.out.println(value);
+       }
+   }
+   ```
+
+   ![1667874378133](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1667874378133.png)
+
 ## Redis6与Spring Boot整合
 
+创建springboot项目引入redis的相关依赖
+
+```xml
+	    <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+```
+
+在配置文件中配置redis的相关配置
+
+```properties
+spring.redis.host=43.138.26.181
+spring.redis.port=6379
+spring.redis.database= 0
+spring.redis.timeout=1800000
+spring.redis.lettuce.pool.max-active=20
+spring.redis.lettuce.pool.max-wait=-1
+spring.redis.lettuce.pool.max-idle=5
+spring.redis.lettuce.pool.min-idle=0
+```
+
+写config代码
+
+```java
+package com.example.demo5.config;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
+
+@EnableCaching
+@Configuration
+public class RedisConfig extends CachingConfigurerSupport {
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        RedisSerializer<String> redisSerializer = new StringRedisSerializer();
+        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
+        ObjectMapper om = new ObjectMapper();
+        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        jackson2JsonRedisSerializer.setObjectMapper(om);
+        template.setConnectionFactory(factory);
+//key序列化方式
+        template.setKeySerializer(redisSerializer);
+//value序列化
+        template.setValueSerializer(jackson2JsonRedisSerializer);
+//value hashmap序列化
+        template.setHashValueSerializer(jackson2JsonRedisSerializer);
+        return template;
+    }
+
+    @Bean
+    public CacheManager cacheManager(RedisConnectionFactory factory) {
+        RedisSerializer<String> redisSerializer = new StringRedisSerializer();
+        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
+//解决查询缓存转换异常的问题
+        ObjectMapper om = new ObjectMapper();
+        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        jackson2JsonRedisSerializer.setObjectMapper(om);
+// 配置序列化（解决乱码的问题）,过期时间600秒
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofSeconds(600))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(redisSerializer))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer))
+                .disableCachingNullValues();
+        RedisCacheManager cacheManager = RedisCacheManager.builder(factory)
+                .cacheDefaults(config)
+                .build();
+        return cacheManager;
+    }
+}
+```
+
+写测试代码
+
+```java
+package com.example.demo5.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/redisTest")
+public class RedisTestController {
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @GetMapping
+    public String testRedis() {
+        //设置值到redis
+        redisTemplate.opsForValue().set("name","mary");
+        //从redis获取值
+        String name = (String)redisTemplate.opsForValue().get("name");
+        return name;
+    }
+}
+
+
+```
+
+常见问题：可能因为某个依赖的版本不兼容导致项目启动不起来,通过报错信息修改相关依赖的版本
+
 ## Redis6的事务操作
+
+Redis中的事务是一个单独的隔离操作,事务中的所有命令都会被序列化,按顺序的执行,事务在执行的过程中,不会被其他客户端发送来的命令请求打断.
+
+1. multi 进行组队,将多个操作放入到一个事务队列中
+2. exec 进行执行,对事务队列中的多个操作按顺序执行,相当于事务提交
+3. discard 表示组队中断,相当于事务回滚
+
+注意事项
+
+1. 在组队阶段,如果有一个操作语法错误,则该事务队列中的所有操作都不执行
+2. 在组队阶段成功放入队列中的操作不一定在执行阶段执行成功,但即使某个操作没有执行成功也不会影响事务队列中其他操作的正常进行
+
+#### 事务冲突
+
+在并发操作中发生的冲突
+
+##### 悲观锁
+
+每次操作之前都需要先对操作的数据进行加锁
+
+##### 乐观锁
+
+不是在每次操作之前进行加锁,而是通过引入版本号的方式来执行,每次对数据进行操作都需要增加版本号,通过比较版本号来判断是否发生了事务冲突,如果冲突则再加锁
+
+redis采用乐观锁来解决事务冲突
+
+watch key1 key2 ... keyn // 监视key1-n多个键,在开启事务之前监视多个key
+
+unwatch key1 key2 .. keyn // 曲线监视key1-n多个键
+
+#### 事务特性
+
+1. 单独的隔离操作
+
+2. 没有隔离级别的概念
+
+3. 不保证原子性
+
+   事务中如果有一条命令执行失败,则不会影响该事务中其他操作正常执行
 
 ## Redis6持久化之RDB
 
