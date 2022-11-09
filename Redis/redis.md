@@ -56,9 +56,11 @@
 
 4. 解压redis压缩包:tar -zxvf redis-6.2.7.tar.gz
 
-5. 编译完成后执行make install
+5. 进入redis-6.2.7中执行make命令进行编译
 
-6. 文件会默认下载到/usr/local/bin目录下![1665922407341](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1665922407341.png)
+6. 编译完成后执行make install
+
+7. 文件会默认下载到/usr/local/bin目录下![1665922407341](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1665922407341.png)
 
    redis-benchmark:性能测试工具
 
@@ -85,6 +87,13 @@
    5. 通过ps -ef | grep redis命令查看redis的端口占用情况![1665923397752](C:\Users\qiu\AppData\Roaming\Typora\typora-user-images\1665923397752.png)
    6. 通过redis-cli命令使客户端连接上redis
    7. 可以通过redis-cli shutdown或直接kill -9 (redis的进程号)来关闭redis
+   8. 最好在一开始就修改好redis.conf配置文件
+      1. daemonize no 改为 daemonize yes(允许后台启动)
+      2. bind 127.0.0.1 这一行注释掉,允许其他服务器访问
+      3. protected-mode yes 改为no ,取消保护模式,否则其他服务器没办法正常访问
+      4. 第2条和第3条的设置是为了云服务器的访问,但也会造成黑客通过开放的6379端口进入你的服务器挖矿...惨痛的教训.   为了防止这种现象的发生一定给redis设置密码. 搜索到requirepass foo..这一行.这一行本来是一个注释,将注释符取消掉,然后将foo...改为自己的密码.
+      5. 保存后退出
+   9. 注意 当给redis设置了密码时,每次启动redis客户端,都需要auth 密码,然后才可以正常访问
 
 ### Redis相关知识
 
