@@ -50,6 +50,7 @@
    1. 查看远程仓库 git remote -v
    2. 添加远程仓库 git remote add 仓库别名 仓库地址       // 与git clone 不同,这是自己添加的远程库
    3. 从远程仓库中拉去数据 git fetch 远程仓库名
+<<<<<<< HEAD
    4. 推送到远程仓库 git push 远程仓库名 本地分支名:远程仓库的分支名
    5. 查看某个远程仓库 git remote show 远程仓库地址
    6. 远程仓库的重命名 git remote rename 原来仓库名 新仓库名
@@ -92,6 +93,5 @@
 git branch --merged 可以查看当前有哪些分支进行了合并. 通常情况下合并的分支中只需要保存一个包含原来所有分支内容的分支即可,其他分支可以通过git branch -d 分支名删除掉
 
 git branch --no-merged可以查看当前有哪些分支没有进行合并.这些分支通过git branch -d 分支名的操作无法删除,如果执意要删除,可以通过git branch -D 分支名的操作进行强制删除
-
 
 
