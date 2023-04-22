@@ -402,7 +402,7 @@ ReentrantLock和synchronized的区别
 
 1. sleep和wait的区别
 
-   sleep是Thread类中的方法,含义是暂停执行某段时间,将执行权交给其他线程.**sleep方法不会释放占用的对象锁**,sleep使当前线程进入阻塞状态
+   sleep是Thread类中的方法,含义是暂停一段时间,然后继续执行该线程.**sleep方法不会释放占用的对象锁**,sleep使当前线程进入阻塞状态
 
    wait是Object类的方法,调用wait方法会让该对象释放占用的锁,进入等待队列
 
